@@ -3,7 +3,6 @@ from django.urls import reverse
 from category.models import Category
 
 
-
 class Product(models.Model):
     product_name = models.CharField(max_length=200, unique=True)
     slug = models.SlugField(max_length=200, unique=True)
@@ -20,4 +19,31 @@ class Product(models.Model):
         return self.product_name
 
     def get_url(self):
-        return reverse('product_detail', args=[self.category.slug,self.slug])
+        return reverse('product_detail', args=[self.category.slug, self.slug])
+
+
+VariationCategoryChoices = (
+    ('color', 'color'),
+    ('size', 'size'),
+)
+
+
+class VariationManager(models.Manager):
+    def colors(self):
+        return super(VariationManager, self).filter(category='color', is_available=True)
+
+    def sizes(self):
+        return super(VariationManager, self).filter(category='size', is_available=True)
+
+
+class Variation(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    category = models.CharField(max_length=100, choices=VariationCategoryChoices)
+    value = models.CharField(max_length=100)
+    is_available = models.BooleanField(default=True)
+    create_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.value
+
+    objects = VariationManager()
